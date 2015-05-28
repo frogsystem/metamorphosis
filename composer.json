@@ -1,0 +1,38 @@
+{
+  "name": "frogszstem/metamorphosis",
+  "description": "",
+  "homepage": "https://github.com/frogsystem/metamorphosis",
+  "support": {
+    "issues": "https://github.com/frogsystem/metamorphosis/issues",
+    "source": "https://github.com/frogsystem/metamorphosis"
+  },
+  "minimum-stability": "dev",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Moritz Kornher",
+      "email": "mail@moritzkornher.de"
+    }
+  ],
+  "require": {
+    "php": ">=5.5.0",
+    "zendframework/zend-diactoros": "1.0.1",
+    "aura/router": "3.0.0-alpha2",
+    "league/flysystem": "1.0.3",
+    "frogsystem/spawn": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "Frogsystem\\Metamorphosis\\": "src/frogsystem/metamorphosis/"
+    }
+  },
+  "require-dev": {
+    "phpunit/phpunit": "4.6.6",
+    "codacy/coverage": "dev-master"
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Frogsystem\\Metamorphosis\\": "test/"
+    }
+  }
+}
