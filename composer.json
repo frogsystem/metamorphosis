@@ -1,12 +1,12 @@
 {
-  "name": "frogszstem/metamorphosis",
+  "name": "frogsystem/metamorphosis",
   "description": "",
   "homepage": "https://github.com/frogsystem/metamorphosis",
   "support": {
     "issues": "https://github.com/frogsystem/metamorphosis/issues",
     "source": "https://github.com/frogsystem/metamorphosis"
   },
-  "minimum-stability": "dev",
+  "minimum-stability": "stable",
   "license": "MIT",
   "authors": [
     {
@@ -16,10 +16,11 @@
   ],
   "require": {
     "php": ">=5.5.0",
-    "zendframework/zend-diactoros": "1.0.1",
-    "aura/router": "3.0.0-alpha2",
-    "league/flysystem": "1.0.3",
-    "frogsystem/spawn": "dev-master"
+    "zendframework/zend-diactoros": "^1.0.1",
+    "aura/router": "^3.0.0-alpha2",
+    "league/flysystem": "^1.0.3",
+    "frogsystem/spawn": "@dev",
+    "psr/http-message": "^1.0"
   },
   "autoload": {
     "psr-4": {
@@ -27,7 +28,7 @@
     }
   },
   "require-dev": {
-    "phpunit/phpunit": "4.6.6",
+    "phpunit/phpunit": "^4.6.6",
     "codacy/coverage": "dev-master"
   },
   "autoload-dev": {
