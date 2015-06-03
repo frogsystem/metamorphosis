@@ -2,13 +2,13 @@
 namespace Frogsystem\Metamorphosis\Providers;
 
 use Frogsystem\Metamorphosis\WebApplication;
-use Frogsystem\Spawn\Contracts\ServiceProviderInterface;
+use Frogsystem\Spawn\Contracts\PluggableInterface;
 
 /**
  * Class ServiceProvider
  * @package Frogsystem\Metamorphosis\Providers
  */
-abstract class ServiceProvider implements ServiceProviderInterface
+abstract class ServiceProvider implements PluggableInterface
 {
     /**
      * @var WebApplication The app container.
@@ -26,5 +26,12 @@ abstract class ServiceProvider implements ServiceProviderInterface
     /**
      * Registers entries with the container.
      */
-    abstract public function register();
+    abstract public function plugin();
+
+    /**
+     * Remove entries with the container.
+     */
+    public function unplug()
+    {
+    }
 }

@@ -12,7 +12,7 @@ class RouterServiceProvider extends ServiceProvider
     /**
      * Register the Map and Matcher with the container
      */
-    public function register()
+    public function plugin()
     {
         $routerContainer = new RouterContainer();
         $this->app['Aura\Router\Map'] = $routerContainer->getMap();

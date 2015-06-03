@@ -3,7 +3,6 @@ namespace Frogsystem\Metamorphosis;
 
 use Frogsystem\Metamorphosis\Contracts\HttpKernelInterface;
 use Frogsystem\Metamorphosis\Contracts\MiddlewareInterface;
-use Frogsystem\Metamorphosis\Kernels\WebApplicationKernel;
 use Frogsystem\Spawn\Application;
 use Frogsystem\Spawn\Contracts\KernelInterface;
 use Interop\Container\ContainerInterface;

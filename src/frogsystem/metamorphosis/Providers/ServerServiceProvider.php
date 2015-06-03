@@ -12,7 +12,7 @@ class ServerServiceProvider extends ServiceProvider
     /**
      * Register the Server implementation, capture the Request and create an empty response
      */
-    public function register()
+    public function plugin()
     {
         $this->app->server
             = $this->app['Frogsystem\Metamorphosis\Contracts\ServerInterface']

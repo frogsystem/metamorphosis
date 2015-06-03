@@ -3,14 +3,14 @@ namespace Frogsystem\Metamorphosis\Providers;
 
 use Aura\Router\Map;
 use Frogsystem\Spawn\Container;
-use Frogsystem\Spawn\Contracts\ServiceProviderInterface;
+use Frogsystem\Spawn\Contracts\PluggableInterface;
 use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class ServiceProvider
  * @package Frogsystem\Metamorphosis\Providers
  */
-abstract class RouteServiceProvider implements ServiceProviderInterface
+abstract class RoutesProvider implements PluggableInterface
 {
     /**
      * @var Container The app container.
@@ -20,7 +20,7 @@ abstract class RouteServiceProvider implements ServiceProviderInterface
     /**
      * @var Map The route map.
      */
-    protected $router;
+    protected $map;
 
     /**
      * @var string The base namespace of the controllers.
@@ -29,12 +29,12 @@ abstract class RouteServiceProvider implements ServiceProviderInterface
 
     /**
      * @param Container $app
-     * @param Map $router
+     * @param Map $map
      */
-    public function __construct(Container $app, Map $router)
+    public function __construct(Container $app, Map $map)
     {
         $this->app = $app;
-        $this->router = $router;
+        $this->map = $map;
     }
 
     /**
@@ -63,7 +63,9 @@ abstract class RouteServiceProvider implements ServiceProviderInterface
     }
 
     /**
-     *
+     * Remove routes
      */
-    abstract public function register();
+    public function unplug()
+    {
+    }
 }
