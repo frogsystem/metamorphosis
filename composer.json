@@ -1,6 +1,6 @@
 {
   "name": "frogsystem/metamorphosis",
-  "description": "",
+  "description": "Simple web application framework, build around PSR-7 and container-interop standards.",
   "homepage": "https://github.com/frogsystem/metamorphosis",
   "support": {
     "issues": "https://github.com/frogsystem/metamorphosis/issues",
@@ -14,6 +14,11 @@
       "email": "mail@moritzkornher.de"
     }
   ],
+  "extra": {
+    "branch-alias": {
+      "dev-master": "1.0-dev"
+    }
+  },
   "require": {
     "php": ">=5.5.0",
     "zendframework/zend-diactoros": "^1.0.1",

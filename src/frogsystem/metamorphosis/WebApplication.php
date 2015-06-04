@@ -5,6 +5,7 @@ use Frogsystem\Metamorphosis\Contracts\HttpKernelInterface;
 use Frogsystem\Metamorphosis\Contracts\MiddlewareInterface;
 use Frogsystem\Spawn\Application;
 use Frogsystem\Spawn\Contracts\KernelInterface;
+use Frogsystem\Spawn\Contracts\RunnableInterface;
 use Interop\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -12,7 +13,7 @@ use Zend\Diactoros\Response;
 
 /**
  * Class WebApplication
- * @property Contracts\Server server
+ * @property Contracts\ServerInterface server
  * @package Frogsystem\Metamorphosis
  */
 class WebApplication extends Application
@@ -44,6 +45,14 @@ class WebApplication extends Application
 
     public function run()
     {
+        // run pluggables
+        foreach ($this->pluggables as $pluggable) {
+            if ($pluggable instanceof RunnableInterface) {
+                $pluggable->run();
+            }
+        }
+
+        // start listening
         $this->server->listen([$this, 'terminate']);
     }
 
@@ -56,12 +65,15 @@ class WebApplication extends Application
     public function handle(ServerRequestInterface $request, ResponseInterface $response, callable $done)
     {
         // Run middleware
-        $response = $this->handleMiddleware($request, $response);
+        try {
+            $response = $this->handleMiddleware($request, $response);
 
-        // Check if done or not
-        if (!$done) {
-            return $response;
+        // trigger error handling
+        } catch (\Exception $e) {
+            return $done($request, $response, $e);
         }
+
+        // all good
         return $done($request, $response);
     }
 
@@ -99,15 +111,16 @@ class WebApplication extends Application
     /**
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param null $error
+     * @param \Exception|null $error
      * @return ResponseInterface
      */
-    public function terminate(ServerRequestInterface $request, ResponseInterface $response, $error = null)
+    public function terminate(ServerRequestInterface $request, ResponseInterface $response, \Exception $error = null)
     {
         if (!$error) {
             return $response;
         }
         // Return an error here
-        return $response;
+        return $response->withStatus(404)
+            ->getBody()->write($error->getMessage());
     }
 }

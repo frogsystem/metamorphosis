@@ -8,17 +8,24 @@ namespace Frogsystem\Metamorphosis\Kernels;
 class WebApplicationKernel extends HttpKernel
 {
     /**
-     * @var array
+     * Get a list of all Kernel Pluggables
+     * @return array
      */
-    protected $middleware = [
-        'Frogsystem\Metamorphosis\Middleware\RouterMiddleware',
-    ];
+    public function getPluggables()
+    {
+        return array_merge([
+            'Frogsystem\Metamorphosis\Providers\RouterServiceProvider',
+            'Frogsystem\Metamorphosis\Providers\ServerServiceProvider',
+        ], $this->pluggables);
+    }
 
     /**
-     * @var array
+     * @return mixed
      */
-    protected $pluggables = [
-        'Frogsystem\Metamorphosis\Providers\RouterServiceProvider',
-        'Frogsystem\Metamorphosis\Providers\ServerServiceProvider',
-    ];
+    public function getMiddleware()
+    {
+        return array_merge([
+            'Frogsystem\Metamorphosis\Middleware\RouterMiddleware',
+        ], $this->middleware);
+    }
 }

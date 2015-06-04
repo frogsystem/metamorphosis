@@ -33,11 +33,17 @@ class RouterMiddleware extends Container implements MiddlewareInterface
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
      * @param callable $next
+     * @return ResponseInterface
+     * @throws \Exception
      */
     public function handle(ServerRequestInterface $request, ResponseInterface $response, callable $next)
     {
         // Get route
         $route = $this->matcher->match($request);
+
+        if (!$route) {
+            throw new \Exception('Not found', 404);
+        }
 
         /** @var callable $callable */
         $callable = $route->handler;
