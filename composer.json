@@ -24,7 +24,7 @@
     "zendframework/zend-diactoros": "^1.0.1",
     "aura/router": "^3.0.0-alpha2",
     "league/flysystem": "^1.0.3",
-    "frogsystem/spawn": "@dev",
+    "frogsystem/spawn": "dev-master as 1.0.0",
     "psr/http-message": "^1.0"
   },
   "autoload": {
