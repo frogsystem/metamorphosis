@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "eb5dfdd09c7e8dcaba60b0f43027788e",
+    "hash": "22c42e1701fd3e3320fb7978f18331b1",
     "packages": [
         {
             "name": "aura/router",
@@ -1522,8 +1522,8 @@
     ],
     "aliases": [
         {
-            "alias": "1.0.0",
-            "alias_normalized": "1.0.0.0",
+            "alias": "1.0.x-dev",
+            "alias_normalized": "1.0.9999999.9999999-dev",
             "version": "9999999-dev",
             "package": "frogsystem/spawn"
         }
