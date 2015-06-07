@@ -54,6 +54,6 @@ class RouterMiddleware extends Container implements MiddlewareInterface
         }
 
         // Invoke with response and route attributes
-        return $next($this->invoke($callable, [$response] + $route->attributes));
+        return $next($request, $this->invoke($callable, [$response] + $route->attributes));
     }
 }

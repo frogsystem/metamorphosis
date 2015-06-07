@@ -90,7 +90,7 @@ class WebApplication extends Application
         /** @var callable|MiddlewareInterface $middleware The next middleware. */
         if ($middleware = array_pop($this->middleware)) {
             // next middleware callable
-            $next = function (ResponseInterface $response) use ($request) {
+            $next = function (ServerRequestInterface $request, ResponseInterface $response) {
                 return $this->handleMiddleware($request, $response);
             };
 
@@ -101,7 +101,7 @@ class WebApplication extends Application
 
             // run the handle method if its a Middleware
             if ($middleware instanceof MiddlewareInterface) {
-                return $middleware->handle($request, $response, $next);
+                $middleware = [$middleware, 'handle'];
             }
 
             // invoke the middleware as callable
