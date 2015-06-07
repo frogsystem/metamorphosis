@@ -27,6 +27,9 @@ class WebApplication extends Application
     {
         // call parent constructor
         parent::__construct($delegate);
+
+        // set default application instance
+        $this->set('Frogsystem\Metamorphosis\WebApplication', $this);
     }
 
     /**
@@ -120,7 +123,7 @@ class WebApplication extends Application
             return $response;
         }
         // Return an error here
-        return $response->withStatus(404)
-            ->getBody()->write($error->getMessage());
+        $response->getBody()->write($error->getMessage());
+        return $response->withStatus(404);
     }
 }
