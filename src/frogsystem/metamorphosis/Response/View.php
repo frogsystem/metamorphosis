@@ -2,13 +2,13 @@
 namespace Frogsystem\Metamorphosis\Response;
 
 use Frogsystem\Metamorphosis\Contracts\Renderer;
-use Zend\Diactoros\Response;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class View
  * @package Frogsystem\Metamorphosis\Response
  */
-class View implements Renderer
+class View implements Renderer, ResponseInterface
 {
     use ResponseTrait;
 
