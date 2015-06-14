@@ -3,6 +3,7 @@ namespace Frogsystem\Metamorphosis\Response;
 
 use Frogsystem\Metamorphosis\Contracts\Renderer;
 use Psr\Http\Message\ResponseInterface;
+use Zend\Diactoros\Stream;
 
 /**
  * Class View
@@ -20,6 +21,8 @@ class View implements Renderer, ResponseInterface
     public function __construct(Renderer $renderer)
     {
         $this->renderer = $renderer;
+        $this->stream     = new Stream('php://memory', 'wb+');
+        $this->statusCode =  200;
     }
 
     /**
