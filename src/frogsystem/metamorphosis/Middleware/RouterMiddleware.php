@@ -31,12 +31,11 @@ class RouterMiddleware extends Container implements MiddlewareInterface
 
     /**
      * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
      * @param callable $next
      * @return ResponseInterface
      * @throws \Exception
      */
-    public function handle(ServerRequestInterface $request, ResponseInterface $response, callable $next)
+    public function handle(ServerRequestInterface $request, callable $next)
     {
         // Get route
         $route = $this->matcher->match($request);
@@ -54,6 +53,7 @@ class RouterMiddleware extends Container implements MiddlewareInterface
         }
 
         // Invoke with response and route attributes
-        return $next($request, $this->invoke($callable, [$response] + $route->attributes));
+        $response = $next($request);
+        return $this->invoke($callable, [$response] + $route->attributes);
     }
 }

@@ -12,8 +12,8 @@ interface MiddlewareInterface
 {
     /**
      * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
      * @param callable $next
+     * @return ResponseInterface
      */
-    public function handle(ServerRequestInterface $request, ResponseInterface $response, callable $next);
+    public function handle(ServerRequestInterface $request, callable $next);
 }

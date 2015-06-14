@@ -15,7 +15,7 @@ class WebApplicationKernel extends HttpKernel
     {
         return array_merge([
             'Frogsystem\Metamorphosis\Providers\RouterServiceProvider',
-            'Frogsystem\Metamorphosis\Providers\ServerServiceProvider',
+            'Frogsystem\Metamorphosis\Providers\HttpServiceProvider',
         ], $this->pluggables);
     }
 

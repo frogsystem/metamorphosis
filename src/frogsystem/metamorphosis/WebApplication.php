@@ -5,11 +5,10 @@ use Frogsystem\Metamorphosis\Contracts\HttpKernelInterface;
 use Frogsystem\Metamorphosis\Contracts\MiddlewareInterface;
 use Frogsystem\Spawn\Application;
 use Frogsystem\Spawn\Contracts\KernelInterface;
-use Frogsystem\Spawn\Contracts\RunnableInterface;
 use Interop\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Zend\Diactoros\Response;
+use Zend\Diactoros\ServerRequestFactory;
 
 /**
  * Class WebApplication
@@ -48,32 +47,29 @@ class WebApplication extends Application
 
     public function run()
     {
-        // run pluggables
-        foreach ($this->pluggables as $pluggable) {
-            if ($pluggable instanceof RunnableInterface) {
-                $pluggable->run();
-            }
-        }
+        parent::run();
 
-        // start listening
-        $this->server->listen([$this, 'terminate']);
+        // start middleware calling
+        $response = $this->handle($this->find('Psr\Http\Message\ServerRequestInterface'), [$this, 'terminate']);
+
+        // Emit response
+        $this->find('Zend\Diactoros\Response\EmitterInterface')->emit($response);
     }
 
     /**
      * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
      * @param callable $done
-     * @return mixed|ResponseInterface
+     * @return ResponseInterface
      */
-    public function handle(ServerRequestInterface $request, ResponseInterface $response, callable $done)
+    public function handle(ServerRequestInterface $request, callable $done)
     {
         // Run middleware
         try {
-            $response = $this->handleMiddleware($request, $response);
+            $response = $this->handleMiddleware($request);
 
         // trigger error handling
         } catch (\Exception $e) {
-            return $done($request, $response, $e);
+            return $done($request, null, $e);
         }
 
         // all good
@@ -82,33 +78,27 @@ class WebApplication extends Application
 
     /**
      * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @return mixed|ResponseInterface
+     * @return ResponseInterface
      */
-    protected function handleMiddleware(ServerRequestInterface $request, ResponseInterface $response)
+    protected function handleMiddleware(ServerRequestInterface $request)
     {
         /** @var callable|MiddlewareInterface $middleware The next middleware. */
         if ($middleware = array_pop($this->middleware)) {
-            // next middleware callable
-            $next = function (ServerRequestInterface $request, ResponseInterface $response) {
-                return $this->handleMiddleware($request, $response);
-            };
-
-            // Get the Middleware object
+            // Make the Middleware object
             if (is_string($middleware)) {
                 $middleware = $this->make($middleware);
             }
 
-            // run the handle method if its a Middleware
+            // invoke the middleware callable
             if ($middleware instanceof MiddlewareInterface) {
                 $middleware = [$middleware, 'handle'];
             }
-
-            // invoke the middleware as callable
-            return $middleware($request, $response, $next);
+            return $middleware($request, function (ServerRequestInterface $request) {
+                return $this->handleMiddleware($request);
+            });
         }
 
-        return $response;
+        return $this->find('Psr\Http\Message\ResponseInterface');
     }
 
     /**
