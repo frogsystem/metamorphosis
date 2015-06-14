@@ -68,7 +68,7 @@ class WebApplication extends Application
 
         // trigger error handling
         } catch (\Exception $e) {
-            return $done($request, null, $e);
+            return $done($request, $this->find('Psr\Http\Message\ResponseInterface'), $e);
         }
 
         // all good
