@@ -8,7 +8,7 @@ use Zend\Diactoros\Response;
  * Class View
  * @package Frogsystem\Metamorphosis\Response
  */
-class View extends Response implements Renderer
+class View implements Renderer
 {
     use ResponseTrait;
 
