@@ -4,7 +4,7 @@ namespace Frogsystem\Metamorphosis\Providers;
 use Aura\Router\Map;
 use Frogsystem\Spawn\Container;
 use Frogsystem\Spawn\Contracts\PluggableInterface;
-use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Class ServiceProvider
@@ -55,11 +55,8 @@ abstract class RoutesProvider implements PluggableInterface
         }
 
         // Return closure
-        return function (ResponseInterface $response) use ($controller, $method) {
-            $args = func_get_args();
-            $controller = $this->app->get($controller);
-            return $this->app->invoke([$controller, $method], $args);
-        };
+        $controller = $this->app->get($controller);
+        return [$controller, $method];
     }
 
     /**
