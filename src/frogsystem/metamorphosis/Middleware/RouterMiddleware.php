@@ -54,6 +54,8 @@ class RouterMiddleware extends Container implements MiddlewareInterface
 
         // Invoke with response and route attributes
         $response = $next($request);
-        return $this->invoke($callable, [$response] + $route->attributes);
+        return $this->invoke($callable, array_merge([
+            'Psr\Http\Message\ResponseInterface' => $response
+        ] + $route->attributes));
     }
 }

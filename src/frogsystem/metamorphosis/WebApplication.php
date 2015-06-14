@@ -8,7 +8,6 @@ use Frogsystem\Spawn\Contracts\KernelInterface;
 use Interop\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Zend\Diactoros\ServerRequestFactory;
 
 /**
  * Class WebApplication
