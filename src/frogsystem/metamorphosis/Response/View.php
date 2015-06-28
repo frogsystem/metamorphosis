@@ -36,7 +36,7 @@ class View extends Response
      * @param array $data
      * @return View
      */
-    public function render($view, array $data)
+    public function render($view, array $data = [])
     {
         $this->getBody()->write($this->renderer->render($view, $data));
         return $this;
