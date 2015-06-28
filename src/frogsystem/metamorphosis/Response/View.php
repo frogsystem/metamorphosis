@@ -3,7 +3,6 @@ namespace Frogsystem\Metamorphosis\Response;
 
 use Frogsystem\Metamorphosis\Contracts\Renderer;
 use Zend\Diactoros\Response;
-use Zend\Diactoros\Stream;
 
 /**
  * Class View
