@@ -22,6 +22,15 @@ class View extends Response
     }
 
     /**
+     * Set a new renderer to the view
+     * @param Renderer $renderer
+     */
+    public function setRenderer(Renderer $renderer)
+    {
+        $this->renderer = $renderer;
+    }
+
+    /**
      * Renders a view with the given data.
      * @param $view
      * @param array $data
