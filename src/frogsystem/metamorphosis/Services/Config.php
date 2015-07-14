@@ -1,6 +1,7 @@
 <?php
 namespace Frogsystem\Metamorphosis\Services;
 
+use Dflydev\DotAccessData\Data;
 use Dflydev\DotAccessData\DataInterface;
 use Frogsystem\Metamorphosis\Contracts\ConfigInterface;
 
@@ -16,9 +17,9 @@ class Config implements ConfigInterface
     protected $data;
 
     /**
-     * @param DataInterface $data
+     * @param Data $data
      */
-    public function __construct(DataInterface $data)
+    public function __construct(Data $data)
     {
         $this->data = $data;
     }
