@@ -1,7 +1,7 @@
 <?php
 namespace Frogsystem\Metamorphosis\Response;
 
-use Frogsystem\Metamorphosis\Contracts\Renderer;
+use Frogsystem\Metamorphosis\Contracts\RendererInterface;
 use Zend\Diactoros\Response;
 
 /**
@@ -13,9 +13,9 @@ class View extends Response
     private $renderer;
 
     /**
-     * @param Renderer $renderer
+     * @param RendererInterface $renderer
      */
-    public function __construct(Renderer $renderer)
+    public function __construct(RendererInterface $renderer)
     {
         parent::__construct();
         $this->renderer = $renderer;
@@ -23,9 +23,9 @@ class View extends Response
 
     /**
      * Set a new renderer to the view
-     * @param Renderer $renderer
+     * @param RendererInterface $renderer
      */
-    public function setRenderer(Renderer $renderer)
+    public function setRenderer(RendererInterface $renderer)
     {
         $this->renderer = $renderer;
     }

@@ -5,7 +5,7 @@ namespace Frogsystem\Metamorphosis\Contracts;
  * Interface Renderer
  * @package Frogsystem\Metamorphosis\Contracts
  */
-interface Renderer
+interface RendererInterface
 {
     /**
      * Renders a view with the given data.

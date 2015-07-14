@@ -21,11 +21,13 @@
   },
   "require": {
     "php": ">=5.5.0",
-    "zendframework/zend-diactoros": "^1.0.1",
-    "aura/router": "^3.0.0-alpha2",
-    "league/flysystem": "^1.0.3",
+    "zendframework/zend-diactoros": "^1.1",
+    "aura/router": "^3.0.0-beta1",
+    "league/flysystem": "^1.0",
     "frogsystem/spawn": "dev-master as 1.0.x-dev",
-    "psr/http-message": "^1.0"
+    "psr/http-message": "^1.0",
+    "dflydev/dot-access-data": "^1.0",
+    "vlucas/phpdotenv": "^2.0"
   },
   "autoload": {
     "psr-4": {
