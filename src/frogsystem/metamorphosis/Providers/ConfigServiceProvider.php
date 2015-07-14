@@ -13,6 +13,6 @@ class ConfigServiceProvider extends ServiceProvider
     public function plugin()
     {
         $this->app['Frogsystem\Metamorphosis\Contracts\ConfigInterface']
-            = $this->app->factory('Frogsystem\Metamorphosis\FileConfig');
+            = $this->app->factory('Frogsystem\Metamorphosis\Services\FileConfig');
     }
 }
