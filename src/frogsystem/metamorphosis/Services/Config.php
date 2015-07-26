@@ -44,7 +44,7 @@ class Config implements ConfigInterface
      */
     public function get($name)
     {
-        $this->data->get($name);
+        return $this->data->get($name);
     }
 
     /**

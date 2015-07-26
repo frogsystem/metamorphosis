@@ -18,7 +18,6 @@ interface ConfigInterface extends \ArrayAccess
      * Set a config value in dot notation.
      * @param $name
      * @param $value
-     * @return mixed
      */
     public function set($name, $value = null);
 
