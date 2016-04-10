@@ -4,12 +4,10 @@ namespace Frogsystem\Metamorphosis;
 use Frogsystem\Metamorphosis\Constrains\GroupHugTrait;
 use Frogsystem\Metamorphosis\Constrains\HuggableTrait;
 use Frogsystem\Metamorphosis\Contracts\GroupHuggable;
-use Frogsystem\Metamorphosis\Contracts\Huggable;
 use Frogsystem\Metamorphosis\Middleware\RouterMiddleware;
 use Frogsystem\Metamorphosis\Providers\ConfigServiceProvider;
 use Frogsystem\Metamorphosis\Providers\HttpServiceProvider;
 use Frogsystem\Metamorphosis\Providers\RouterServiceProvider;
-use Frogsystem\Spawn\Application;
 use Frogsystem\Spawn\Container;
 use Interop\Container\ContainerInterface;
 use Psr\Http\Message\RequestInterface;
@@ -36,7 +34,7 @@ class WebApplication extends Container implements GroupHuggable
         ConfigServiceProvider::class,
     ];
 
-    private $middleware = [
+    protected $middleware = [
         RouterMiddleware::class
     ];
 
@@ -50,6 +48,7 @@ class WebApplication extends Container implements GroupHuggable
 
         // set default application instance
         $this->set(self::class, $this);
+        $this->set(get_called_class(), $this);
 
         $this->huggables = $this->load($this->huggables);
         $this->groupHug($this->huggables);
@@ -63,7 +62,6 @@ class WebApplication extends Container implements GroupHuggable
                 $huggable = $this->make($huggable);
                 $huggables[$key] = $huggable;
             }
-            var_dump(get_class($huggable));
         }
 
         return $huggables;
@@ -113,6 +111,7 @@ class WebApplication extends Container implements GroupHuggable
         if ($middleware = array_pop($this->middleware)) {
             // Make the middleware
             if (is_string($middleware)) {
+                var_dump($middleware);
                 $middleware = $this->make($middleware);
             }
 
