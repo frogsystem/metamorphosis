@@ -1,10 +1,15 @@
 <?php
 namespace Frogsystem\Metamorphosis\Providers;
 
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Zend\Diactoros\Response\EmitterInterface;
+use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequestFactory;
+use Zend\Diactoros\Response\SapiEmitter;
 
 /**
- * Class ServerServiceProvider
+ * Class HttpServiceProvider
  * @package Frogsystem\Metamorphosis\Providers
  */
 class HttpServiceProvider extends ServiceProvider
@@ -14,13 +19,17 @@ class HttpServiceProvider extends ServiceProvider
      */
     public function plugin()
     {
-        $this->app['Psr\Http\Message\ResponseInterface']
-            = $this->app->factory('Zend\Diactoros\Response');
+        $this->app[ResponseInterface::class]
+            = $this->app->factory(Response::class);
 
-        $this->app['Psr\Http\Message\ServerRequestInterface']
-            = ServerRequestFactory::fromGlobals();
+        $this->app[ServerRequestInterface::class] = function () {
+            if (isset($this->app->request)) {
+                return $this->app->request;
+            }
+            return ServerRequestFactory::fromGlobals();
+        };
 
-        $this->app['Zend\Diactoros\Response\EmitterInterface']
-            = $this->app->factory('Zend\Diactoros\Response\SapiEmitter');
+        $this->app[EmitterInterface::class]
+            = $this->app->factory(SapiEmitter::class);
     }
 }

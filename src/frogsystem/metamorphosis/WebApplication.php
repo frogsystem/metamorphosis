@@ -2,16 +2,17 @@
 namespace Frogsystem\Metamorphosis;
 
 use Frogsystem\Metamorphosis\Contracts\HttpKernelInterface;
-use Frogsystem\Metamorphosis\Contracts\MiddlewareInterface;
 use Frogsystem\Spawn\Application;
 use Frogsystem\Spawn\Contracts\KernelInterface;
 use Interop\Container\ContainerInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Zend\Diactoros\Response\EmitterInterface;
 
 /**
  * Class WebApplication
- * @property Contracts\ServerInterface server
+ * @property ServerRequestInterface request
  * @package Frogsystem\Metamorphosis
  */
 class WebApplication extends Application
@@ -27,7 +28,7 @@ class WebApplication extends Application
         parent::__construct($delegate);
 
         // set default application instance
-        $this->set('Frogsystem\Metamorphosis\WebApplication', $this);
+        $this->set(self::class, $this);
     }
 
     /**
@@ -44,75 +45,60 @@ class WebApplication extends Application
         }
     }
 
-    public function run()
+    /**
+     * @param ServerRequestInterface|null $request
+     * @param ResponseInterface|null $response
+     * @param Callable|null $next
+     * @return ResponseInterface
+     */
+    public function __invoke(ServerRequestInterface $request = null, ResponseInterface $response = null, $next = null)
     {
         parent::run();
 
-        // start middleware calling
-        $response = $this->handle($this->find('Psr\Http\Message\ServerRequestInterface'), [$this, 'terminate']);
-
-        // Emit response
-        $this->find('Zend\Diactoros\Response\EmitterInterface')->emit($response);
-    }
-
-    /**
-     * @param ServerRequestInterface $request
-     * @param callable $done
-     * @return ResponseInterface
-     */
-    public function handle(ServerRequestInterface $request, callable $done)
-    {
-        // Run middleware
-        try {
-            $response = $this->handleMiddleware($request);
-
-        // trigger error handling
-        } catch (\Exception $e) {
-            return $done($request, $this->find('Psr\Http\Message\ResponseInterface'), $e);
+        // Read Request if omitted
+        if (is_null($request)) {
+            $request = $this->get(ServerRequestInterface::class);
         }
 
-        // all good
-        return $done($request, $response);
-    }
-
-    /**
-     * @param ServerRequestInterface $request
-     * @return ResponseInterface
-     */
-    protected function handleMiddleware(ServerRequestInterface $request)
-    {
-        /** @var callable|MiddlewareInterface $middleware The next middleware. */
-        if ($middleware = array_pop($this->middleware)) {
-            // Make the Middleware object
-            if (is_string($middleware)) {
-                $middleware = $this->make($middleware);
-            }
-
-            // invoke the middleware callable
-            if ($middleware instanceof MiddlewareInterface) {
-                $middleware = [$middleware, 'handle'];
-            }
-            return $middleware($request, function (ServerRequestInterface $request) {
-                return $this->handleMiddleware($request);
-            });
+        // Create Response if omitted
+        if (is_null($response)) {
+            $response = $this->get(ResponseInterface::class);
         }
 
-        return $this->find('Psr\Http\Message\ResponseInterface');
+        if (is_null($next)) {
+            $next = function (RequestInterface $request, ResponseInterface $response) {
+                return $response;
+            };
+        }
+
+        $response = $this->handle($request, $response, $next);
+        return $this->get(EmitterInterface::class)->emit($response);
     }
 
     /**
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param \Exception|null $error
+     * @param Callable $next
      * @return ResponseInterface
      */
-    public function terminate(ServerRequestInterface $request, ResponseInterface $response, \Exception $error = null)
+    public function handle(ServerRequestInterface $request, ResponseInterface $response, $next)
     {
-        if (!$error) {
-            return $response;
+        // set request to
+        $this->request = $request;
+
+        /** @var callable $middleware The next middleware. */
+        if ($middleware = array_pop($this->middleware)) {
+            // Make the middleware
+            if (is_string($middleware)) {
+                $middleware = $this->make($middleware);
+            }
+
+            // Run the next Middleware
+            return $middleware($request, $response, function (ServerRequestInterface $request, ResponseInterface $response) use ($next) {
+                return $this->handle($request, $response, $next);
+            });
         }
-        // Return an error here
-        $response->getBody()->write($error->getMessage());
-        return $response->withStatus(404);
+
+        return $next($request, $response);
     }
 }

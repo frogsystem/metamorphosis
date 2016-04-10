@@ -12,7 +12,7 @@ use Psr\Http\Message\ResponseInterface;
  * Class RouterMiddleware
  * @package Frogsystem\Metamorphosis\Middleware
  */
-class RouterMiddleware extends Container implements MiddlewareInterface
+class RouterMiddleware extends Container
 {
     /**
      * @var Matcher The route matcher.
@@ -31,11 +31,12 @@ class RouterMiddleware extends Container implements MiddlewareInterface
 
     /**
      * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
      * @param callable $next
      * @return ResponseInterface
      * @throws \Exception
      */
-    public function handle(ServerRequestInterface $request, callable $next)
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
     {
         // Get route
         $route = $this->matcher->match($request);
@@ -54,7 +55,7 @@ class RouterMiddleware extends Container implements MiddlewareInterface
 
         // Invoke with response and route attributes
         return $this->invoke($callable, array_merge([
-            'Psr\Http\Message\ResponseInterface' => $next($request),
+            'Psr\Http\Message\ResponseInterface' => $next($request, $response),
             'Psr\Http\Message\ServerRequestInterface' => $request,
         ], $route->attributes));
     }
