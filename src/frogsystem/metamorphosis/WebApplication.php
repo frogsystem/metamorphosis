@@ -1,9 +1,16 @@
 <?php
 namespace Frogsystem\Metamorphosis;
 
-use Frogsystem\Metamorphosis\Contracts\HttpKernelInterface;
+use Frogsystem\Metamorphosis\Constrains\GroupHugTrait;
+use Frogsystem\Metamorphosis\Constrains\HuggableTrait;
+use Frogsystem\Metamorphosis\Contracts\GroupHuggable;
+use Frogsystem\Metamorphosis\Contracts\Huggable;
+use Frogsystem\Metamorphosis\Middleware\RouterMiddleware;
+use Frogsystem\Metamorphosis\Providers\ConfigServiceProvider;
+use Frogsystem\Metamorphosis\Providers\HttpServiceProvider;
+use Frogsystem\Metamorphosis\Providers\RouterServiceProvider;
 use Frogsystem\Spawn\Application;
-use Frogsystem\Spawn\Contracts\KernelInterface;
+use Frogsystem\Spawn\Container;
 use Interop\Container\ContainerInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -15,9 +22,23 @@ use Zend\Diactoros\Response\EmitterInterface;
  * @property ServerRequestInterface request
  * @package Frogsystem\Metamorphosis
  */
-class WebApplication extends Application
+class WebApplication extends Container implements GroupHuggable
 {
-    protected $middleware = [];
+    use HuggableTrait;
+    use GroupHugTrait;
+
+    /**
+     * @var array
+     */
+    private $huggables = [
+        RouterServiceProvider::class,
+        HttpServiceProvider::class,
+        ConfigServiceProvider::class,
+    ];
+
+    private $middleware = [
+        RouterMiddleware::class
+    ];
 
     /**
      * @param ContainerInterface $delegate
@@ -29,21 +50,25 @@ class WebApplication extends Application
 
         // set default application instance
         $this->set(self::class, $this);
+
+        $this->huggables = $this->load($this->huggables);
+        $this->groupHug($this->huggables);
     }
 
-    /**
-     * @param KernelInterface $kernel
-     * @return mixed
-     */
-    public function load(KernelInterface $kernel)
+    protected function load($huggables)
     {
-        parent::load($kernel);
-
-        // Add Middleware
-        if ($kernel instanceof HttpKernelInterface) {
-            $this->middleware += $kernel->getMiddleware();
+        // Connect Pluggables
+        foreach ($huggables as $key => $huggable) {
+            if (is_string($huggable)) {
+                $huggable = $this->make($huggable);
+                $huggables[$key] = $huggable;
+            }
+            var_dump(get_class($huggable));
         }
+
+        return $huggables;
     }
+
 
     /**
      * @param ServerRequestInterface|null $request
@@ -53,8 +78,6 @@ class WebApplication extends Application
      */
     public function __invoke(ServerRequestInterface $request = null, ResponseInterface $response = null, $next = null)
     {
-        parent::run();
-
         // Read Request if omitted
         if (is_null($request)) {
             $request = $this->get(ServerRequestInterface::class);
@@ -81,7 +104,7 @@ class WebApplication extends Application
      * @param Callable $next
      * @return ResponseInterface
      */
-    public function handle(ServerRequestInterface $request, ResponseInterface $response, $next)
+    protected function handle(ServerRequestInterface $request, ResponseInterface $response, $next)
     {
         // set request to
         $this->request = $request;

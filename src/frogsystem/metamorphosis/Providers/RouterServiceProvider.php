@@ -2,6 +2,7 @@
 namespace Frogsystem\Metamorphosis\Providers;
 
 use Aura\Router\RouterContainer;
+use Frogsystem\Spawn\Container;
 
 /**
  * Class RouterServiceProvider
@@ -10,12 +11,12 @@ use Aura\Router\RouterContainer;
 class RouterServiceProvider extends ServiceProvider
 {
     /**
-     * Register the Map and Matcher with the container
+     * Registers entries with the container.
+     * @param Container $app
      */
-    public function plugin()
+    public function register(Container $app)
     {
         $routerContainer = new RouterContainer();
-        $this->app['Aura\Router\Map'] = $routerContainer->getMap();
-        $this->app['Aura\Router\Matcher'] = $routerContainer->getMatcher();
+        $app['Aura\Router\Map'] = $routerContainer->getMap();
     }
 }

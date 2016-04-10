@@ -10,7 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * Class ServiceProvider
  * @package Frogsystem\Metamorphosis\Providers
  */
-abstract class RoutesProvider implements PluggableInterface
+abstract class RoutesProvider
 {
     /**
      * @var Container The app container.
@@ -57,12 +57,5 @@ abstract class RoutesProvider implements PluggableInterface
         // Return closure
         $controller = $this->app->get($controller);
         return [$controller, $method];
-    }
-
-    /**
-     * Remove routes
-     */
-    public function unplug()
-    {
     }
 }

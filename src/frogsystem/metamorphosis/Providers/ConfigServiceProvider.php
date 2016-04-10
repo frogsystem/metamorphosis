@@ -1,6 +1,12 @@
 <?php
 namespace Frogsystem\Metamorphosis\Providers;
 
+use Dflydev\DotAccessData\Data;
+use Dflydev\DotAccessData\DataInterface;
+use Frogsystem\Metamorphosis\Contracts\ConfigInterface;
+use Frogsystem\Metamorphosis\Services\FileConfig;
+use Frogsystem\Spawn\Container;
+
 /**
  * Class ConfigServiceProvider
  * @package Frogsystem\Metamorphosis\Providers
@@ -9,12 +15,11 @@ class ConfigServiceProvider extends ServiceProvider
 {
     /**
      * Registers entries with the container.
+     * @param Container $app
      */
-    public function plugin()
+    public function register(Container $app)
     {
-        $this->app['Dflydev\DotAccessData\DataInterface']
-            = $this->app->factory('Dflydev\DotAccessData\Data');
-        $this->app['Frogsystem\Metamorphosis\Contracts\ConfigInterface']
-            = $this->app->factory('Frogsystem\Metamorphosis\Services\FileConfig');
+        $app[DataInterface::class] = $app->factory(Data::class);
+        $app[ConfigInterface::class] = $app->factory(FileConfig::class);
     }
 }
