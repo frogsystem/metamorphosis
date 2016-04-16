@@ -5,7 +5,7 @@ namespace Frogsystem\Metamorphosis\Contracts;
  * Interface Renderer
  * @package Frogsystem\Metamorphosis\Contracts
  */
-interface Renderer
+interface RendererInterface
 {
     /**
      * Renders a view with the given data.
@@ -13,5 +13,5 @@ interface Renderer
      * @param array $data
      * @return string
      */
-    public function render($view, array $data);
+    public function render($view, array $data = []);
 }

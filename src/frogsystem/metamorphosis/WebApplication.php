@@ -1,22 +1,46 @@
 <?php
 namespace Frogsystem\Metamorphosis;
 
-use Frogsystem\Metamorphosis\Contracts\HttpKernelInterface;
-use Frogsystem\Metamorphosis\Contracts\MiddlewareInterface;
-use Frogsystem\Spawn\Application;
-use Frogsystem\Spawn\Contracts\KernelInterface;
+use Exception;
+use Frogsystem\Metamorphosis\Constrains\GroupHugTrait;
+use Frogsystem\Metamorphosis\Constrains\HuggableTrait;
+use Frogsystem\Metamorphosis\Contracts\GroupHuggable;
+use Frogsystem\Metamorphosis\Middleware\RouterMiddleware;
+use Frogsystem\Metamorphosis\Providers\ConfigServiceProvider;
+use Frogsystem\Metamorphosis\Providers\HttpServiceProvider;
+use Frogsystem\Metamorphosis\Providers\RouterServiceProvider;
+use Frogsystem\Spawn\Container;
 use Interop\Container\ContainerInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Zend\Diactoros\Response\EmitterInterface;
+use Zend\Diactoros\Response\HtmlResponse;
+use Zend\Diactoros\Response\SapiEmitter;
 
 /**
  * Class WebApplication
- * @property Contracts\ServerInterface server
+ * @property ServerRequestInterface request
+ * @property EmitterInterface emitter
  * @package Frogsystem\Metamorphosis
  */
-class WebApplication extends Application
+class WebApplication extends Container implements GroupHuggable
 {
-    protected $middleware = [];
+    use HuggableTrait;
+    use GroupHugTrait;
+
+    /**
+     * @var array
+     */
+    private $huggables = [
+        RouterServiceProvider::class,
+        HttpServiceProvider::class,
+        ConfigServiceProvider::class,
+    ];
+
+    protected $middleware = [
+        RouterMiddleware::class
+    ];
 
     /**
      * @param ContainerInterface $delegate
@@ -27,92 +51,123 @@ class WebApplication extends Application
         parent::__construct($delegate);
 
         // set default application instance
-        $this->set('Frogsystem\Metamorphosis\WebApplication', $this);
+        $this->set(self::class, $this);
+        $this->set(get_called_class(), $this);
+
+        // set emitter
+        $this->emitter = $this->factory(SapiEmitter::class);
+
+        $this->huggables = $this->load($this->huggables);
+        $this->groupHug($this->huggables);
     }
 
-    /**
-     * @param KernelInterface $kernel
-     * @return mixed
-     */
-    public function load(KernelInterface $kernel)
+    protected function load($huggables)
     {
-        parent::load($kernel);
-
-        // Add Middleware
-        if ($kernel instanceof HttpKernelInterface) {
-            $this->middleware += $kernel->getMiddleware();
+        // Connect Huggables
+        foreach ($huggables as $key => $huggable) {
+            if (is_string($huggable)) {
+                $huggable = $this->make($huggable);
+                $huggables[$key] = $huggable;
+            }
         }
+
+        return $huggables;
     }
 
-    public function run()
-    {
-        parent::run();
-
-        // start middleware calling
-        $response = $this->handle($this->find('Psr\Http\Message\ServerRequestInterface'), [$this, 'terminate']);
-
-        // Emit response
-        $this->find('Zend\Diactoros\Response\EmitterInterface')->emit($response);
-    }
 
     /**
-     * @param ServerRequestInterface $request
-     * @param callable $done
+     * @param ServerRequestInterface|null $request
+     * @param ResponseInterface|null $response
+     * @param Callable|null $next
      * @return ResponseInterface
      */
-    public function handle(ServerRequestInterface $request, callable $done)
+    public function __invoke(ServerRequestInterface $request = null, ResponseInterface $response = null, $next = null)
     {
-        // Run middleware
-        try {
-            $response = $this->handleMiddleware($request);
-
-        // trigger error handling
-        } catch (\Exception $e) {
-            return $done($request, $this->find('Psr\Http\Message\ResponseInterface'), $e);
+        // Read Request if omitted
+        if (is_null($request)) {
+            $request = $this->get(ServerRequestInterface::class);
         }
 
-        // all good
-        return $done($request, $response);
-    }
-
-    /**
-     * @param ServerRequestInterface $request
-     * @return ResponseInterface
-     */
-    protected function handleMiddleware(ServerRequestInterface $request)
-    {
-        /** @var callable|MiddlewareInterface $middleware The next middleware. */
-        if ($middleware = array_pop($this->middleware)) {
-            // Make the Middleware object
-            if (is_string($middleware)) {
-                $middleware = $this->make($middleware);
-            }
-
-            // invoke the middleware callable
-            if ($middleware instanceof MiddlewareInterface) {
-                $middleware = [$middleware, 'handle'];
-            }
-            return $middleware($request, function (ServerRequestInterface $request) {
-                return $this->handleMiddleware($request);
-            });
+        // Create Response if omitted
+        if (is_null($response)) {
+            $response = $this->get(ResponseInterface::class);
         }
 
-        return $this->find('Psr\Http\Message\ResponseInterface');
+        // Application is called as a regular middleware, continue with stack
+        if (!is_null($next)) {
+            return $this->handle($request, $response, $next);
+        }
+
+        // Nothing left to do, emit the response
+        return $this->emitter->emit($this->handle($request, $response));
     }
 
     /**
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param \Exception|null $error
+     * @param Callable $next
      * @return ResponseInterface
      */
-    public function terminate(ServerRequestInterface $request, ResponseInterface $response, \Exception $error = null)
+    protected function handle(ServerRequestInterface $request, ResponseInterface $response, $next = null)
     {
-        if (!$error) {
-            return $response;
+        // Store latest request to container
+        $this->request = $request;
+
+        // Create final middleware
+        if (is_null($next)) {
+            $next = function (RequestInterface $request, ResponseInterface $response) {
+                return $response;
+            };
         }
-        // Return an error here
-        $response->getBody()->write($error->getMessage());
-        return $response->withStatus(404);
+        
+        // Try to run through the stack, catch any errors
+        try {
+            /** @var callable $middleware The next middleware. */
+            if ($middleware = array_pop($this->middleware)) {
+                // Make the middleware
+                if (is_string($middleware)) {
+                    $middleware = $this->make($middleware);
+                }
+
+                // Run the next Middleware
+                return $middleware($request, $response, function (ServerRequestInterface $request, ResponseInterface $response) use ($next) {
+                    return $this->handle($request, $response, $next);
+                });
+            }
+
+            return $next($request, $response);
+            
+        } catch (Exception $exception) {
+            return $this->terminate($request, $response, $exception);
+        }
+    }
+
+    /**
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @param Exception $exception
+     * @return HtmlResponse
+     */
+    public function terminate(ServerRequestInterface $request, ResponseInterface $response, Exception $exception)
+    {
+        // Exception template
+        $template = <<<HTML
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>There was an error with your application</title>
+    </head>
+    <body>
+        <h1>Quack! Something went wrong...</h1>
+        <p>
+            <strong>{$exception->getMessage()}</strong>
+        </p>
+        <pre>{$exception->getTraceAsString()}</pre>
+    </body>
+</html>
+HTML;
+
+        // Create Error Response
+        return new HtmlResponse($template, 501);
     }
 }

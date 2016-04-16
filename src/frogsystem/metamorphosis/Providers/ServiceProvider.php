@@ -1,37 +1,36 @@
 <?php
 namespace Frogsystem\Metamorphosis\Providers;
 
-use Frogsystem\Metamorphosis\WebApplication;
-use Frogsystem\Spawn\Contracts\PluggableInterface;
+use Frogsystem\Metamorphosis\Contracts\Huggable;
+use Frogsystem\Metamorphosis\Constrains\HuggableTrait;
+use Frogsystem\Spawn\Container;
 
 /**
  * Class ServiceProvider
  * @package Frogsystem\Metamorphosis\Providers
  */
-abstract class ServiceProvider implements PluggableInterface
+abstract class ServiceProvider implements Huggable
 {
-    /**
-     * @var WebApplication The app container.
-     */
-    protected $app;
+    use HuggableTrait {
+        hug as protected returnHug;
+    }
 
     /**
-     * @param WebApplication $app
+     * Implementation of the HuggableInterface
+     * @param Huggable $huggable
      */
-    public function __construct(WebApplication $app)
+    public function hug(Huggable $huggable)
     {
-        $this->app = $app;
+        // If huggable is a container
+        if ($huggable instanceof Container) {
+            $this->register($huggable);
+        }
+        $this->returnHug($this);
     }
 
     /**
      * Registers entries with the container.
+     * @param Container $app
      */
-    abstract public function plugin();
-
-    /**
-     * Remove entries with the container.
-     */
-    public function unplug()
-    {
-    }
+    abstract public function register(Container $app);
 }

@@ -2,25 +2,25 @@
 namespace Frogsystem\Metamorphosis\Providers;
 
 use Aura\Router\Map;
+use Frogsystem\Metamorphosis\Constrains\HuggableTrait;
+use Frogsystem\Metamorphosis\Contracts\Huggable;
 use Frogsystem\Spawn\Container;
-use Frogsystem\Spawn\Contracts\PluggableInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use Interop\Container\ContainerInterface;
 
 /**
  * Class ServiceProvider
  * @package Frogsystem\Metamorphosis\Providers
  */
-abstract class RoutesProvider implements PluggableInterface
+abstract class RoutesProvider implements Huggable
 {
+    use HuggableTrait {
+        hug as protected returnHug;
+    }
+
     /**
      * @var Container The app container.
      */
     protected $app;
-
-    /**
-     * @var Map The route map.
-     */
-    protected $map;
 
     /**
      * @var string The base namespace of the controllers.
@@ -29,12 +29,10 @@ abstract class RoutesProvider implements PluggableInterface
 
     /**
      * @param Container $app
-     * @param Map $map
      */
-    public function __construct(Container $app, Map $map)
+    public function __construct(Container $app)
     {
         $this->app = $app;
-        $this->map = $map;
     }
 
     /**
@@ -46,7 +44,7 @@ abstract class RoutesProvider implements PluggableInterface
     {
         // Prepend namespace
         if ($this->namespace && 0 !== strpos($controller, "\\")) {
-            $controller = $this->namespace."\\".$controller;
+            $controller = $this->namespace . "\\" . $controller;
         }
 
         // Add controller to app if necessary
@@ -60,9 +58,21 @@ abstract class RoutesProvider implements PluggableInterface
     }
 
     /**
-     * Remove routes
+     * Implementation of the HuggableInterface
+     * @param Huggable $huggable
      */
-    public function unplug()
+    public function hug(Huggable $huggable)
     {
+        // If huggable is a container
+        if ($huggable instanceof ContainerInterface && $huggable->has(Map::class)) {
+            $this->registerRoutes($huggable->get(Map::class));
+        }
+        $this->returnHug($this);
     }
+
+    /**
+     * @param Map $map
+     * @return mixed
+     */
+    abstract protected function registerRoutes(Map $map);
 }

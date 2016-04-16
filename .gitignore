@@ -3,6 +3,7 @@ build/
 
 # Composer
 composer.phar
+composer.lock
 vendor/
 
 # Vagrant

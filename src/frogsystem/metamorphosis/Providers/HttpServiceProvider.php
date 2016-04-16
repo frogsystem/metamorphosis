@@ -1,26 +1,33 @@
 <?php
 namespace Frogsystem\Metamorphosis\Providers;
 
+use Frogsystem\Spawn\Container;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequestFactory;
 
 /**
- * Class ServerServiceProvider
+ * Class HttpServiceProvider
  * @package Frogsystem\Metamorphosis\Providers
  */
 class HttpServiceProvider extends ServiceProvider
 {
     /**
-     * Register the Server implementation, capture the Request and create an empty response
+     * Registers entries with the container.
+     * @param Container $app
      */
-    public function plugin()
+    public function register(Container $app)
     {
-        $this->app['Psr\Http\Message\ResponseInterface']
-            = $this->app->factory('Zend\Diactoros\Response');
+        $app[ResponseInterface::class]
+            = $app->factory(Response::class);
 
-        $this->app['Psr\Http\Message\ServerRequestInterface']
-            = ServerRequestFactory::fromGlobals();
-
-        $this->app['Zend\Diactoros\Response\EmitterInterface']
-            = $this->app->factory('Zend\Diactoros\Response\SapiEmitter');
+        $app[ServerRequestInterface::class] = function () use ($app) {
+            // Return changed request if available
+            if (isset($app->request)) {
+                return $app->request;
+            }
+            return ServerRequestFactory::fromGlobals();
+        };
     }
 }
