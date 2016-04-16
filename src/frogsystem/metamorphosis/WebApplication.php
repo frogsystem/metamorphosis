@@ -1,6 +1,7 @@
 <?php
 namespace Frogsystem\Metamorphosis;
 
+use Exception;
 use Frogsystem\Metamorphosis\Constrains\GroupHugTrait;
 use Frogsystem\Metamorphosis\Constrains\HuggableTrait;
 use Frogsystem\Metamorphosis\Contracts\GroupHuggable;
@@ -14,10 +15,13 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response\EmitterInterface;
+use Zend\Diactoros\Response\HtmlResponse;
+use Zend\Diactoros\Response\SapiEmitter;
 
 /**
  * Class WebApplication
  * @property ServerRequestInterface request
+ * @property EmitterInterface emitter
  * @package Frogsystem\Metamorphosis
  */
 class WebApplication extends Container implements GroupHuggable
@@ -50,13 +54,16 @@ class WebApplication extends Container implements GroupHuggable
         $this->set(self::class, $this);
         $this->set(get_called_class(), $this);
 
+        // set emitter
+        $this->emitter = $this->factory(SapiEmitter::class);
+
         $this->huggables = $this->load($this->huggables);
         $this->groupHug($this->huggables);
     }
 
     protected function load($huggables)
     {
-        // Connect Pluggables
+        // Connect Huggables
         foreach ($huggables as $key => $huggable) {
             if (is_string($huggable)) {
                 $huggable = $this->make($huggable);
@@ -86,14 +93,13 @@ class WebApplication extends Container implements GroupHuggable
             $response = $this->get(ResponseInterface::class);
         }
 
-        if (is_null($next)) {
-            $next = function (RequestInterface $request, ResponseInterface $response) {
-                return $response;
-            };
+        // Application is called as a regular middleware, continue with stack
+        if (!is_null($next)) {
+            return $this->handle($request, $response, $next);
         }
 
-        $response = $this->handle($request, $response, $next);
-        return $this->get(EmitterInterface::class)->emit($response);
+        // Nothing left to do, emit the response
+        return $this->emitter->emit($this->handle($request, $response));
     }
 
     /**
@@ -102,25 +108,66 @@ class WebApplication extends Container implements GroupHuggable
      * @param Callable $next
      * @return ResponseInterface
      */
-    protected function handle(ServerRequestInterface $request, ResponseInterface $response, $next)
+    protected function handle(ServerRequestInterface $request, ResponseInterface $response, $next = null)
     {
-        // set request to
+        // Store latest request to container
         $this->request = $request;
 
-        /** @var callable $middleware The next middleware. */
-        if ($middleware = array_pop($this->middleware)) {
-            // Make the middleware
-            if (is_string($middleware)) {
-                var_dump($middleware);
-                $middleware = $this->make($middleware);
+        // Create final middleware
+        if (is_null($next)) {
+            $next = function (RequestInterface $request, ResponseInterface $response) {
+                return $response;
+            };
+        }
+        
+        // Try to run through the stack, catch any errors
+        try {
+            /** @var callable $middleware The next middleware. */
+            if ($middleware = array_pop($this->middleware)) {
+                // Make the middleware
+                if (is_string($middleware)) {
+                    $middleware = $this->make($middleware);
+                }
+
+                // Run the next Middleware
+                return $middleware($request, $response, function (ServerRequestInterface $request, ResponseInterface $response) use ($next) {
+                    return $this->handle($request, $response, $next);
+                });
             }
 
-            // Run the next Middleware
-            return $middleware($request, $response, function (ServerRequestInterface $request, ResponseInterface $response) use ($next) {
-                return $this->handle($request, $response, $next);
-            });
+            return $next($request, $response);
+            
+        } catch (Exception $exception) {
+            return $this->terminate($request, $response, $exception);
         }
+    }
 
-        return $next($request, $response);
+    /**
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @param Exception $exception
+     * @return HtmlResponse
+     */
+    public function terminate(ServerRequestInterface $request, ResponseInterface $response, Exception $exception)
+    {
+        // Exception template
+        $template = <<<HTML
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>There was an error with your application</title>
+    </head>
+    <body>
+        <h1>Quack! Something went wrong...</h1>
+        <p>
+            <strong>{$exception->getMessage()}</strong>
+        </p>
+        <pre>{$exception->getTraceAsString()}</pre>
+    </body>
+</html>
+HTML;
+
+        // Create Error Response
+        return new HtmlResponse($template, 501);
     }
 }

@@ -4,10 +4,8 @@ namespace Frogsystem\Metamorphosis\Providers;
 use Frogsystem\Spawn\Container;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Zend\Diactoros\Response\EmitterInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequestFactory;
-use Zend\Diactoros\Response\SapiEmitter;
 
 /**
  * Class HttpServiceProvider
@@ -25,12 +23,11 @@ class HttpServiceProvider extends ServiceProvider
             = $app->factory(Response::class);
 
         $app[ServerRequestInterface::class] = function () use ($app) {
-//            if (isset($app->request)) {
-//                return $app->request;
-//            }
+            // Return changed request if available
+            if (isset($app->request)) {
+                return $app->request;
+            }
             return ServerRequestFactory::fromGlobals();
         };
-
-        $app[EmitterInterface::class] = $app->factory(SapiEmitter::class);
     }
 }
