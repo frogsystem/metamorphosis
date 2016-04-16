@@ -2,7 +2,6 @@
 namespace Frogsystem\Metamorphosis\Middleware;
 
 use Aura\Router\Matcher;
-use Frogsystem\Metamorphosis\Contracts\MiddlewareInterface;
 use Frogsystem\Spawn\Container;
 use Interop\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;

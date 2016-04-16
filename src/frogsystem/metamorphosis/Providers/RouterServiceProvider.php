@@ -1,7 +1,9 @@
 <?php
 namespace Frogsystem\Metamorphosis\Providers;
 
+use Aura\Router\Map;
 use Aura\Router\RouterContainer;
+use Aura\Router\Rule\RuleIterator;
 use Frogsystem\Spawn\Container;
 
 /**
@@ -17,6 +19,7 @@ class RouterServiceProvider extends ServiceProvider
     public function register(Container $app)
     {
         $routerContainer = new RouterContainer();
-        $app['Aura\Router\Map'] = $routerContainer->getMap();
+        $app[Map::class] = $routerContainer->getMap();
+        $app[RuleIterator::class] = $routerContainer->getRuleIterator();
     }
 }
